@@ -1,0 +1,39 @@
+import base64
+import requests
+
+# --------------------------------------------------------------
+# 1. Insert your credentials here
+# --------------------------------------------------------------
+CLIENT_ID = "REDACTED"
+CLIENT_SECRET = "REDACTED"
+
+TOKEN_URL = "https://api.kroger.com/v1/connect/oauth2/token"
+
+def get_kroger_token():
+    # Encode client_id:client_secret in base64
+    creds = f"{CLIENT_ID}:{CLIENT_SECRET}"
+    b64_creds = base64.b64encode(creds.encode()).decode()
+
+    headers = {
+        "Content-Type": "application/x-www-form-urlencoded",
+        "Authorization": f"Basic {b64_creds}"
+    }
+
+    data = {
+        "grant_type": "client_credentials",
+        "scope": "product.compact"
+    }
+
+    response = requests.post(TOKEN_URL, headers=headers, data=data)
+
+    print("STATUS:", response.status_code)
+    print("BODY:", response.text)
+
+    response.raise_for_status()
+
+    return response.json()["access_token"]
+
+
+# ---- Test call ----
+token = get_kroger_token()
+print("TOKEN:", token)
