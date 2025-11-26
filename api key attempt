@@ -132,6 +132,50 @@ def clean_and_transf_kroger(raw_products):
         
         return cleaned 
 
+def into_krogerdb(products, location_id):
+    conn = get_conn()
+    cur = conn.cursor()
+    inserted = 0
+
+    for product in products:
+        if inserted >= db_insert_limit:
+            break 
+    cur.execute(f"SELECT id FROM products WHERE upc = {str(product['upc'])}")
+    row = cur.fetchone()
+
+    if row:
+        product_id = row["id"]
+    else:
+
+        cur.execute(f"""INSERT OR IGNORE INTO products (upc, description, brand)
+                    VALUES ('{product["upc"]}, '{product["description"]}, '{product["brand"]}')
+                    """)
+        conn.commit()
+
+        cur.execute(f"SELECT id FROM products WHERE upc = {str(product['upc'])}")
+
+        product_id = cur.fetchone()["id"]
+
+    cur.execute(f"""
+            INSERT OR IGNORE INTO items (
+                product_id, location_id,
+                regular_price, promo_price, stock_level, size
+            )
+            VALUES (
+                {product_id},
+                '{location_id}',
+                {p["regular_price"]},
+                {p["promo_price"]},
+                '{p["stock_level"]}',
+                '{p["size"]}'
+            )
+        """)
+
+    conn.commit()
+    inserted += 1
+
+    conn.close()
+    return inserted
 
 
 
