@@ -1,39 +1,95 @@
 import base64
 import requests
+import datetime
+import matplotlib.pyplot as plt
+import sqlite3
 
-# --------------------------------------------------------------
-# 1. Insert your credentials here
-# --------------------------------------------------------------
+db_path = "foodproject.db"
+db_insert_limit = 25
 CLIENT_ID = "REDACTED"
 CLIENT_SECRET = "REDACTED"
-
 TOKEN_URL = "https://api.kroger.com/v1/connect/oauth2/token"
 
-def get_kroger_token():
-    # Encode client_id:client_secret in base64
-    creds = f"{CLIENT_ID}:{CLIENT_SECRET}"
-    b64_creds = base64.b64encode(creds.encode()).decode()
+def get_conn():
+    conn = sqlite3.connect(db_path)
+    conn.row_factory = sqlite3.Row
+    return conn
 
-    headers = {
-        "Content-Type": "application/x-www-form-urlencoded",
-        "Authorization": f"Basic {b64_creds}"
+def create_kroger_tables():
+    conn = get_conn()
+    c = conn.cursor()
+
+    products_table = """CREATE TABLE IF NOT EXISTS products(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    upc TEXT,
+    description TEXT,
+    brand TEXT)"""
+
+    # UPC stands for universal product code
+
+    c.execute(products_table)
+
+    ## Using REALs as some are floats 
+    items_table = """CREATE TABLE IF NOT EXISTS items(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    product_id INTEGER,
+    location_id TEXT,
+    regular_price REAL,
+    promo_price REAL,
+    stock_level TEXT,
+    size TEXT,
+    FOREIGN KET(product_id) REFERENCES products(id))"""
+
+    c.execute(items_table)
+
+    price_history_table = """CREATE TABLE IF NOT EXISTS price_history (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    product_id INTEGER,
+    price REAL,
+    date TEXT,
+    FOREIGN KEY(product_id) REFERENCES products(id))"""
+
+    c.execute(price_history_table)
+
+    conn.commit()
+    conn.close()
+    
+    
+    
+    
+
+
+
+# Setting ann arbor kroger location and a product to search
+zipcode = "48104"
+searchterm = "sugar" 
+
+def get_kroger_token(CLIENT_ID, CLIENT_SECRET, TOKEN_URL):
+    # Encode client_id:client_secret in base64
+    auth_str = f"{CLIENT_ID}:{CLIENT_SECRET}"
+    auth_b64 = base64.b64encode(auth_str.encode("ascii")).decode("ascii")
+
+    headers_auth = {
+        "Authorization": f"Basic {auth_b64}",
+        "Content-Type": "application/x-www-form-urlencoded"
     }
 
-    data = {
+    data_auth = {
         "grant_type": "client_credentials",
         "scope": "product.compact"
     }
 
-    response = requests.post(TOKEN_URL, headers=headers, data=data)
+    print("Requesting Production Access Token...")
+    try: 
+        response_token = requests.post(TOKEN_URL, headers=headers_auth, data=data_auth)
+        response_token.raise_for_status()
+        access_token = response_token.json()["access_token"]
+        print("   Success! Production Token acquired.\n")
+        return access_token
+    except requests.exceptions.HTTPError as e:
+        print(f"     Auth failed: {e}")
+        print(f"     Server Response: {response_token.text}")
+        exit()
 
-    print("STATUS:", response.status_code)
-    print("BODY:", response.text)
-
-    response.raise_for_status()
-
-    return response.json()["access_token"]
 
 
-# ---- Test call ----
-token = get_kroger_token()
-print("TOKEN:", token)
