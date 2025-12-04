@@ -6,8 +6,8 @@ import sqlite3
 
 db_path = "foodproject.db"
 db_insert_limit = 25
-CLIENT_ID = "REDACTED"
-CLIENT_SECRET = "REDACTED"
+CLIENT_ID = "REDACTED_ID"
+CLIENT_SECRET = "REDACTED_SECRET"
 
 
 def get_conn():
@@ -62,10 +62,10 @@ def create_kroger_tables():
 
 
 
-def get_kroger_token(CLIENT_ID, CLIENT_SECRET, TOKEN_URL):
+def get_kroger_token(client_id, client_secret, token_url):
     # Encode client_id:client_secret in base64
     TOKEN_URL = "https://api.kroger.com/v1/connect/oauth2/token"
-    auth_str = f"{CLIENT_ID}:{CLIENT_SECRET}"
+    auth_str = f"{client_id}:{client_secret}"
     auth_b64 = base64.b64encode(auth_str.encode("ascii")).decode("ascii")
 
     headers_auth = {
@@ -80,7 +80,7 @@ def get_kroger_token(CLIENT_ID, CLIENT_SECRET, TOKEN_URL):
 
     print("Requesting Production Access Token...")
     try: 
-        response_token = requests.post(TOKEN_URL, headers=headers_auth, data=data_auth)
+        response_token = requests.post(token_url, headers=headers_auth, data=data_auth)
         response_token.raise_for_status()
         access_token = response_token.json()["access_token"]
         print("   Success! Production Token acquired.\n")
@@ -159,37 +159,50 @@ def into_krogerdb(products, location_id):
         if inserted >= db_insert_limit:
             break 
 
-        cur.execute(f"SELECT id FROM products WHERE upc = '{product['upc']}'")
-        row = cur.fetchone()
+        try:
+            if product.get("regular_price") is None:
+                raise ValueError(f"Skipping {product.get('description')}: Missing Price")
+            
+            cur.execute("""INSERT OR IGNORE INTO products (upc, description, brand)
+                        VALUES (?, ?, ?) """,
+                        (product["upc"], product["description"], product["brand"]))
+            
+            
+            
+            
+            
+            
+            cur.execute("SELECT id FROM products WHERE upc = ?", (product['upc'],))
+            row = cur.fetchone()
 
-        if row:
+            if row is None:
+                raise ValueError(f"Database error: Could not retrieve ID for UPC {product['upc']}")
+
+        
             product_id = row["id"]
-        else:
+        
 
-            cur.execute(f"""INSERT OR IGNORE INTO products (upc, description, brand)
-                        VALUES ('{product["upc"]}', '{product["description"]}', '{product["brand"]}')
-                        """)
-            conn.commit()
 
-            cur.execute(f"SELECT id FROM products WHERE upc = '{product['upc']}'")
 
-            product_id = cur.fetchone()["id"]
-
-        cur.execute(f"""
-                INSERT OR IGNORE INTO items (
-                    product_id, location_id,
-                    regular_price, promo_price, stock_level, size
-                )
-                VALUES (
-                    {product_id},
-                    '{location_id}',
-                    {product["regular_price"]},
-                    {product["promo_price"]},
-                    '{product["stock_level"]}',
-                    '{product["size"]}'
-                )
-            """)
-        inserted += 1
+            cur.execute(f"""
+                    INSERT OR IGNORE INTO items (
+                        product_id, location_id,
+                        regular_price, promo_price, stock_level, size
+                    )
+                    VALUES (?,?,?,?,?,?)""", 
+                    (
+                    product_id,
+                    location_id,
+                    product["regular_price"],
+                    product["promo_price"],
+                    product["stock_level"],
+                    product["size"]
+                ))
+        
+            inserted += 1
+        except Exception as weird_error:
+            print(f"\nError processing item: {weird_error}")
+            continue
 
     conn.commit()
     conn.close()
@@ -201,14 +214,15 @@ def save_price_hist():
 
     today = str(datetime.date.today())
 
-    cur.execute("SELECT id, regular_price FROM items WHERE regular_price IS NOT NULL")
+    cur.execute("""SELECT items.product_id AS product_id, items.regular_price
+    FROM items WHERE items.regular_price IS NOT NULL""")
 
     rows = cur.fetchall()
 
     for row in rows:
         cur.execute(f"""
                     INSERT INTO price_history (product_id, price, date)
-                    VALUES ({row["id"]}, {row["regular_price"]}, '{today}')
+                    VALUES ({row["product_id"]}, {row["regular_price"]}, '{today}')
                     """
                     )
         
