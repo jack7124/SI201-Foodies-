@@ -112,6 +112,24 @@ def fetch_kroger_products(access_token, location_id, term="sugar", limit=50):
         print(f"     Auth failed: {e}")
         print(f"     Server Response: {response_token.text}")
         exit()
+
+def get_kroger_loc(access_token, zipcode):
+    url = "https://api.kroger.com/v1/locations"
+    headers = {"Authorization": f"Bearer {access_token}"}
+    params = {"filter.zipCode.near": zipcode}
+    
+    print("Finding Kroger Location")
+    response = requests.get(url, headers=headers, params=params)
+    response.raise_for_status()
+    data = response.json()["data"]
+
+    if not data:
+        print("No location found.")
+        exit()
+
+    location = data[0]
+    print(f"Store found: {location['name']} (ID: {location['locationId']})")
+    return location["locationId"]
     
 def clean_and_transf_kroger(raw_products):
     cleaned = []
@@ -258,34 +276,3 @@ def kroger_calculations():
     
     conn.close()
     print("Kroger calculations complete and saved in kroger_results.txt")
-
-
-
-
-
-
-            
-
-
-
-
-
-    
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# Setting ann arbor kroger location and a product to search
-zipcode = "48104"
-searchterm = "sugar" 
