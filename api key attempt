@@ -38,7 +38,7 @@ def create_kroger_tables():
     promo_price REAL,
     stock_level TEXT,
     size TEXT,
-    FOREIGN KET(product_id) REFERENCES products(id))"""
+    FOREIGN KEY(product_id) REFERENCES products(id))"""
 
     c.execute(items_table)
 
@@ -103,7 +103,7 @@ def fetch_kroger_products(access_token, location_id, term="sugar", limit=50):
     }
 
     try: 
-        response_token = requests.get(access_token, headers=headers, params=params)
+        response_token = requests.get(url, headers=headers, params=params)
         response_token.raise_for_status()
         data = response_token.json()["data"]
         print("   Success! Product data acquired.\n")
@@ -141,40 +141,39 @@ def into_krogerdb(products, location_id):
         if inserted >= db_insert_limit:
             break 
 
-    cur.execute(f"SELECT id FROM products WHERE upc = '{product['upc']}'")
-    row = cur.fetchone()
-
-    if row:
-        product_id = row["id"]
-    else:
-
-        cur.execute(f"""INSERT OR IGNORE INTO products (upc, description, brand)
-                    VALUES ('{product["upc"]}, '{product["description"]}, '{product["brand"]}')
-                    """)
-        conn.commit()
-
         cur.execute(f"SELECT id FROM products WHERE upc = '{product['upc']}'")
+        row = cur.fetchone()
 
-        product_id = cur.fetchone()["id"]
+        if row:
+            product_id = row["id"]
+        else:
 
-    cur.execute(f"""
-            INSERT OR IGNORE INTO items (
-                product_id, location_id,
-                regular_price, promo_price, stock_level, size
-            )
-            VALUES (
-                {product_id},
-                '{location_id}',
-                {product["regular_price"]},
-                {product["promo_price"]},
-                '{product["stock_level"]}',
-                '{product["size"]}'
-            )
-        """)
+            cur.execute(f"""INSERT OR IGNORE INTO products (upc, description, brand)
+                        VALUES ('{product["upc"]}', '{product["description"]}', '{product["brand"]}')
+                        """)
+            conn.commit()
+
+            cur.execute(f"SELECT id FROM products WHERE upc = '{product['upc']}'")
+
+            product_id = cur.fetchone()["id"]
+
+        cur.execute(f"""
+                INSERT OR IGNORE INTO items (
+                    product_id, location_id,
+                    regular_price, promo_price, stock_level, size
+                )
+                VALUES (
+                    {product_id},
+                    '{location_id}',
+                    {product["regular_price"]},
+                    {product["promo_price"]},
+                    '{product["stock_level"]}',
+                    '{product["size"]}'
+                )
+            """)
+        inserted += 1
 
     conn.commit()
-    inserted += 1
-
     conn.close()
     return inserted
 
@@ -232,6 +231,34 @@ def kroger_calculations():
         cheapest = min(price_per_unit, key=lambda x: x[1])
         out.append(f"The cheapest item found out of {len(price_per_unit)} products is {cheapest[0]} (${cheapest[1]})")
     
+    
+    #### Average price 
+    cur.execute("""SELECT AVG(regular_price) AS average 
+                FROM items WHERE regular_price IS NOT NULL
+                
+                """
+                )
+    avg_price = cur.fetchone()["average"]
+    out.append(f"Average price of all products: {round(avg_price, 2)}")
+
+    #### brand comparison
+
+    cur.execute("""SELECT products.brand, AVG(items.regular_price) AS avg_price
+                FROM products
+                JOIN items on products.id = items.product_id
+                WHERE items.regular_price IS NOT NULL
+                GROUP BY products.brand""")
+    
+    brands = cur.fetchall()
+    out.append(f"Brand comparison for {len(brands)} brands complete.")
+
+    with open("kroger_results.txt", 'w') as fh:
+        for line in out:
+            fh.write(line + '\n')
+    
+    conn.close()
+    print("Kroger calculations complete and saved in kroger_results.txt")
+
 
 
 
