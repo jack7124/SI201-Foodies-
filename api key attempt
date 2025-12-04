@@ -191,6 +191,7 @@ def save_price_hist():
     for row in rows:
         cur.execute(f"""
                     INSERT INTO price_history (product_id, price, date)
+                    VALUES ({row["id"]}, {row["regular_price"]}, '{today}')
                     """
                     )
         
@@ -210,7 +211,26 @@ def kroger_calculations():
                 SELECT products.description, items.size, items.regular_price
                 FROM products
                 JOIN items on products.id = items.product_id """)
-    
+    price_per_unit= []
+
+    for row in cur.fetchall():
+        size = row['size']
+        price = row['regular_price']
+
+        if size and price:
+            try:
+                amount = float(size.split()[0])
+                unit_amount = round(price / amount, 4)
+                price_per_unit.append((row["description"], unit_amount))
+            except:
+                continue
+
+    out.append(f"Computed price per unit for {len(price_per_unit)} products")
+
+    #### Cheapest item
+    if price_per_unit:
+        cheapest = min(price_per_unit, key=lambda x: x[1])
+        out.append(f"The cheapest item found out of {len(price_per_unit)} products is {cheapest[0]} (${cheapest[1]})")
     
 
 
