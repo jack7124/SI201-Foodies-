@@ -1,0 +1,4 @@
+Computed price per unit for 110 products
+The cheapest item found out of 110 products is Gold Medal All Purpose Flour ($0.0549)
+Average price of all products: 6.43
+Brand comparison for 44 brands complete.
