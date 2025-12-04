@@ -103,7 +103,7 @@ def fetch_kroger_products(access_token, location_id, term="sugar", limit=50):
     }
 
     try: 
-        response_token = requests.post(access_token, headers=headers, params=params)
+        response_token = requests.get(access_token, headers=headers, params=params)
         response_token.raise_for_status()
         data = response_token.json()["data"]
         print("   Success! Product data acquired.\n")
@@ -130,7 +130,7 @@ def clean_and_transf_kroger(raw_products):
             "stock_level": (item.get("inventory") or {}).get("stockLevel"),
             "size": item.get("size")})
         
-        return cleaned 
+    return cleaned 
 
 def into_krogerdb(products, location_id):
     conn = get_conn()
@@ -140,7 +140,8 @@ def into_krogerdb(products, location_id):
     for product in products:
         if inserted >= db_insert_limit:
             break 
-    cur.execute(f"SELECT id FROM products WHERE upc = {str(product['upc'])}")
+
+    cur.execute(f"SELECT id FROM products WHERE upc = '{product['upc']}'")
     row = cur.fetchone()
 
     if row:
@@ -152,7 +153,7 @@ def into_krogerdb(products, location_id):
                     """)
         conn.commit()
 
-        cur.execute(f"SELECT id FROM products WHERE upc = {str(product['upc'])}")
+        cur.execute(f"SELECT id FROM products WHERE upc = '{product['upc']}'")
 
         product_id = cur.fetchone()["id"]
 
@@ -164,10 +165,10 @@ def into_krogerdb(products, location_id):
             VALUES (
                 {product_id},
                 '{location_id}',
-                {p["regular_price"]},
-                {p["promo_price"]},
-                '{p["stock_level"]}',
-                '{p["size"]}'
+                {product["regular_price"]},
+                {product["promo_price"]},
+                '{product["stock_level"]}',
+                '{product["size"]}'
             )
         """)
 
@@ -176,6 +177,42 @@ def into_krogerdb(products, location_id):
 
     conn.close()
     return inserted
+
+def save_price_hist():
+    conn = get_conn()
+    cur = conn.cursor()
+
+    today = str(datetime.date.today())
+
+    cur.execute("SELECT id, regular_price FROM items WHERE regular_price IS NOT NULL")
+
+    rows = cur.fetchall()
+
+    for row in rows:
+        cur.execute(f"""
+                    INSERT INTO price_history (product_id, price, date)
+                    """
+                    )
+        
+    conn.commit()
+    conn.close()
+
+
+def kroger_calculations():
+    conn = get_conn()
+    cur = conn.cursor()
+
+    out = []
+
+    #### Price per unit
+
+    cur.execute(""" 
+                SELECT products.description, items.size, items.regular_price
+                FROM products
+                JOIN items on products.id = items.product_id """)
+    
+    
+
 
 
 
