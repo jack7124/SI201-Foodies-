@@ -4,6 +4,7 @@ from calcs_and_sql import (
 import matplotlib.pyplot as plt
 ## Fraction to account for items with fractions like 1/2 gallon
 from fractions import Fraction
+import random
 
 
 def price_per_unit():
@@ -58,5 +59,39 @@ def price_per_unit():
     plt.show()
     plt.close()
 
-price_per_unit()
+def brand_avg_price():
+    conn = get_conn()
+    cur = conn.cursor()
+
+    cur.execute("""SELECT products.brand AS brand, AVG(items.regular_price) AS avgp
+                FROM products
+                JOIN items ON products.id = items.product_id
+                WHERE items.regular_price IS NOT NULL 
+                GROUP BY products.brand
+                """)
+    
+    rows = cur.fetchall()
+    conn.close()
+
+    brands = [row["brand"] if row["brand"] else "Unknown" for row in rows]
+    avg_prices = [row["avgp"] for row in rows]
+
+    combined = list(zip(brands, avg_prices))
+    random.shuffle(combined)
+    shuff_brands, shuff_averages = zip(*combined)
+
+    plt.figure(figsize=(10,8))
+    plt.bar(shuff_brands, shuff_averages)
+    plt.title("Average Prices of Brands")
+    plt.xlabel("Brand")
+    plt.ylabel("Average Price ($)")
+    plt.xticks(rotation=90, fontsize=8)
+    plt.tight_layout()
+    plt.savefig("avgp_brand_bar.png")
+    plt.show()
+    plt.close()
+
+
+
+
     
