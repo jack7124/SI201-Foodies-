@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 ## Fraction to account for items with fractions like 1/2 gallon
 from fractions import Fraction
 import random
+import sqlite3
 
 
 def price_per_unit():
@@ -92,6 +93,37 @@ def brand_avg_price():
     plt.close()
 
 
-
-
+def pie_inventory():
+    conn = get_conn()
+    cur = conn.cursor()
+    cur.execute("""SELECT stock_level, COUNT(*) as count
+                FROM items
+                WHERE stock_level IS NOT NULL
+                GROUP BY stock_level
+                """)
     
+    rows = cur.fetchall()
+    stock_list = []
+
+    if not rows:
+        print("Inventory data not found.")
+        return
+    labels = [row["stock_level"].replace('_', ' ').title() for row in rows]
+    count = [row["count"] for row in rows]
+
+    plt.figure(figsize=(10,8))
+    plt.pie(count, labels=labels, autopct='%1.1f%%', 
+            startangle=140, 
+            colors=['#66b3ff','#99ff99','#ffcc99'])
+    plt.title("Product Availability")
+    plt.axis('equal')
+    plt.savefig("inventory_pie.png")
+    plt.show()
+    plt.close()
+
+def make_kroger_graphs():
+    print("\nMaking Kroger Visualizations")
+    price_per_unit()
+    brand_avg_price()
+    pie_inventory()
+    print("Graphs Complete.\n")

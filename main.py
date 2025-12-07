@@ -8,6 +8,7 @@ from calcs_and_sql import (
     save_price_hist,
     kroger_calculations
 )
+from visualizations import make_kroger_graphs
 
 import requests
 
@@ -63,6 +64,9 @@ def main():
     print(f"\nSixth: Run calculations")
     kroger_calculations()
     print(f"\nDone")
+
+    print()
+    make_kroger_graphs()
 
 if __name__ == "__main__":
     main()
