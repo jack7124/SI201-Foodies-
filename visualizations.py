@@ -60,12 +60,21 @@ def price_per_unit():
     
     if not ppu_list:
         print("No PPU list found")
+        return
+
+    # Calculate statistics
+    median_ppu = sorted(ppu_list)[len(ppu_list)//2]
 
     plt.figure(figsize=(10,8))
-    plt.hist(ppu_list, bins=15, edgecolor='black')
+    plt.hist(ppu_list, bins=15, edgecolor='black', color='#4ECDC4', alpha=0.7)
+    
+    # Add the vertical line
+    plt.axvline(median_ppu, color='red', linestyle='dashed', linewidth=2, label=f'Median: ${median_ppu:.2f}/oz')
+    
     plt.title("Distribution of Price Per Unit (Normalized to oz)")
     plt.xlabel("Price Per Unit ($)")
     plt.ylabel("Product Count")
+    plt.legend() # Show the label for the line
     plt.savefig("hist_PPU.png")
     plt.show()
     plt.close()
@@ -90,6 +99,7 @@ def brand_avg_price():
                 JOIN items ON products.id = items.product_id
                 WHERE items.regular_price IS NOT NULL 
                 GROUP BY products.brand
+                ORDER BY avgp ASC
                 """)
     
     rows = cur.fetchall()
@@ -98,6 +108,28 @@ def brand_avg_price():
     brands = [row["brand"] if row["brand"] else "Unknown" for row in rows]
     avg_prices = [row["avgp"] for row in rows]
 
+    # Dynamic height based on number of brands (0.4 inches per brand)
+    plt.figure(figsize=(10, max(6, len(brands) * 0.4)))
+    
+    # Use barh for horizontal bars
+    bars = plt.barh(brands, avg_prices, color='skyblue', edgecolor='black')
+    
+    plt.title("Average Price by Brand (Sorted)", fontsize=14)
+    plt.xlabel("Average Price ($)", fontsize=12)
+    plt.ylabel("Brand", fontsize=12)
+    plt.grid(axis='x', linestyle='--', alpha=0.7)
+    
+    # Add price labels on the ends of bars
+    for bar in bars:
+        width = bar.get_width()
+        plt.text(width + 0.1, bar.get_y() + bar.get_height()/2, 
+                 f'${width:.2f}', va='center', fontsize=9)
+
+    plt.tight_layout()
+    plt.savefig("avgp_brand_bar.png")
+    plt.show()
+    plt.close()
+    '''
     combined = list(zip(brands, avg_prices))
     random.shuffle(combined)
     shuff_brands, shuff_averages = zip(*combined)
@@ -112,7 +144,7 @@ def brand_avg_price():
     plt.savefig("avgp_brand_bar.png")
     plt.show()
     plt.close()
-
+'''
 
 def pie_inventory():
     """
@@ -141,13 +173,22 @@ def pie_inventory():
         return
     labels = [row["stock_level"].replace('_', ' ').title() for row in rows]
     count = [row["count"] for row in rows]
+    total_items = sum(count)
 
-    plt.figure(figsize=(10,8))
-    plt.pie(count, labels=labels, autopct='%1.1f%%', 
-            startangle=140, 
-            colors=['#66b3ff','#99ff99','#ffcc99'])
-    plt.title("Product Availability")
-    plt.axis('equal')
+    fig, ax = plt.subplots(figsize=(10,8))
+
+    # Create the pie, but assign it to a variable 'wedges'
+    wedges, texts, autotexts = ax.pie(count, labels=labels, autopct='%1.1f%%', 
+                                      startangle=140, 
+                                      colors=['#66b3ff','#99ff99','#ffcc99'],
+                                      pctdistance=0.85,  # Push % labels out
+                                      wedgeprops=dict(width=0.4, edgecolor='w')) # width=0.4 makes it a donut
+
+    # Add text in the center hole
+    ax.text(0, 0, f"{total_items}\nProducts", ha='center', va='center', fontsize=20, fontweight='bold')
+
+    plt.setp(autotexts, size=10, weight="bold")
+    plt.title("Product Availability Breakdown", fontsize=16)
     plt.savefig("inventory_pie.png")
     plt.show()
     plt.close()
