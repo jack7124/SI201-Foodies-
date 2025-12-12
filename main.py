@@ -44,7 +44,7 @@ import requests
 
 # Kroger API Configuration  
 ZIPCODE = "48104"
-SEARCH_TERMS = ["sugar", "milk", "flour", "eggs", "ham", "water"]
+SEARCH_TERMS = ["sugar", "milk", "flour", "eggs", "ham", "water", "bread", "cheese", "butter"]
 DB_limit = 25
 
 # Spoonacular API Configuration
@@ -95,7 +95,7 @@ def main():
 
         
         products = fetch_kroger_products(
-            access_token, location_id, term=term, limit=50)
+            access_token, location_id, term=term, limit=25)
         
         if products:
             print("Cleaning data")
@@ -137,7 +137,7 @@ def main():
         if total_meals >= DB_limit:
             print(f"\nTarget reached for {DB_limit} meals")
             break
-        
+
         print(f"\nSearching for '{search_term}' recipes...")
         
         raw_meals = fetch_meal_data_spoonacular(
