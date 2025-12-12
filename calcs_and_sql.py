@@ -50,7 +50,7 @@ def create_kroger_tables():
     # UPC stands for Universal Product Code (barcode identifier)
     products_table = """CREATE TABLE IF NOT EXISTS products(
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    upc TEXT,
+    upc TEXT UNIQUE,
     description TEXT,
     brand TEXT)"""
 
@@ -66,7 +66,8 @@ def create_kroger_tables():
     promo_price REAL,
     stock_level TEXT,
     size TEXT,
-    FOREIGN KEY(product_id) REFERENCES products(id))"""
+    FOREIGN KEY(product_id) REFERENCES products(id),
+    UNIQUE(product_id))"""
 
     c.execute(items_table)
 
@@ -335,8 +336,8 @@ def into_krogerdb(products, location_id):
                     product["stock_level"],
                     product["size"]
                 ))
-        
-            inserted += 1
+            if cur.rowcount > 0:
+                inserted += 1
         except Exception as weird_error:
             print(f"\nError processing item: {weird_error}")
             continue
@@ -583,8 +584,8 @@ def into_spoonacular_db(meals):
                 meal["ingredients_list"],
                 meal["meal_url"]
             ))
-            
-            inserted += 1
+            if cur.rowcount > 0:
+                inserted += 1
             
         except Exception as e:
             print(f"   Error inserting meal: {e}")
