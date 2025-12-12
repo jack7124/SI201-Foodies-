@@ -554,6 +554,8 @@ def into_spoonacular_db(meals):
     inserted = 0
     
     for meal in meals:
+        if inserted >= db_insert_limit:
+            break
         try:
             # Skip meals without essential nutrition data
             if meal.get("calories") is None or meal.get("protein_g") is None:
