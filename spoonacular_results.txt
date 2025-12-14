@@ -1,0 +1,37 @@
+=== SPOONACULAR NUTRITION ANALYSIS ===
+
+Total meals analyzed: 128
+
+
+--- Average Nutrition by Cuisine ---
+Middle Eastern: Avg Calories: 751.2, Avg Protein: 22.0g, Avg Health Score: 100.0 (2 meals)
+European: Avg Calories: 186.5, Avg Protein: 5.6g, Avg Health Score: 100.0 (1 meals)
+Japanese: Avg Calories: 114.1, Avg Protein: 5.3g, Avg Health Score: 86.0 (1 meals)
+South American: Avg Calories: 474.9, Avg Protein: 29.0g, Avg Health Score: 85.0 (1 meals)
+Unknown: Avg Calories: 449.7, Avg Protein: 22.6g, Avg Health Score: 72.7 (101 meals)
+Chinese: Avg Calories: 571.8, Avg Protein: 41.0g, Avg Health Score: 71.5 (2 meals)
+Thai: Avg Calories: 556.7, Avg Protein: 19.7g, Avg Health Score: 63.0 (1 meals)
+Mediterranean: Avg Calories: 632.8, Avg Protein: 30.2g, Avg Health Score: 55.8 (5 meals)
+Mexican: Avg Calories: 558.9, Avg Protein: 38.1g, Avg Health Score: 49.9 (7 meals)
+American: Avg Calories: 608.1, Avg Protein: 54.7g, Avg Health Score: 48.0 (3 meals)
+Southern: Avg Calories: 662.5, Avg Protein: 65.6g, Avg Health Score: 47.0 (1 meals)
+Korean: Avg Calories: 396.6, Avg Protein: 5.2g, Avg Health Score: 38.0 (1 meals)
+Indian: Avg Calories: 371.1, Avg Protein: 38.4g, Avg Health Score: 25.0 (1 meals)
+bbq: Avg Calories: 380.8, Avg Protein: 20.3g, Avg Health Score: 22.0 (1 meals)
+
+--- Health Category Distribution ---
+Moderately Healthy: 42 meals (32.8%)
+Healthy: 41 meals (32.0%)
+Less Healthy: 45 meals (35.2%)
+
+--- Top 5 Meals by Nutrition Index ---
+1. Slow Cooker Beef Stew (Score: 64.08)
+2. Italian Tuna Pasta (Score: 63.25)
+3. Colorful Tomato and Spinach Seafood Pasta (Score: 62.93)
+4. Moosewood Lentil Soup (Score: 62.59)
+5. Red Lentil Soup with Chicken and Turnips (Score: 62.26)
+
+--- Average Macronutrient Breakdown ---
+Protein: 20.2%
+Fat: 34.6%
+Carbs: 45.2%

@@ -1,0 +1,43 @@
+
+--- Price Per Unit Calculation ---
+Computed price per unit for 105 products
+
+--- Cheapest Item Calculation ---
+The cheapest item found out of 105 products is Imperial Sugar Packets ($0.0379)
+
+--- Average Price Calculation ---
+Average price of -1 products: 6.29
+
+--- Brand Price Comparison ---
+Brand comparison for 31 brands complete.
+Boar's Head: Average Price = $14.99
+Bob Evans: Average Price = $12.49
+Bob's Red Mill: Average Price = $7.73
+Cook's: Average Price = $3.66
+Cumberland Gap: Average Price = $4.24
+Domino: Average Price = $6.39
+Double L Ranch: Average Price = $7.49
+Eggland's Best: Average Price = $4.54
+Fairlife: Average Price = $5.99
+Gold Medal: Average Price = $5.51
+Happy Egg Co.: Average Price = $8.59
+Hatfield: Average Price = $3.29
+Horizon Organic: Average Price = $11.1
+Imperial Sugar: Average Price = $3.54
+In The Raw: Average Price = $5.49
+King Arthur Baking Company: Average Price = $8.61
+Kodiak: Average Price = $6.99
+Kroger: Average Price = $2.84
+Lakanto: Average Price = $11.49
+Mentos: Average Price = $5.49
+Nellie's: Average Price = $4.79
+Pete and Gerrys: Average Price = $5.99
+Pillsbury: Average Price = $4.99
+Pioneer: Average Price = $4.49
+Private Selection: Average Price = $7.62
+Simple Truth: Average Price = $5.75
+Simple Truth Organic: Average Price = $5.34
+Smart Way: Average Price = $8.76
+Smithfield: Average Price = $8.78
+Vital Farms: Average Price = $8.92
+Zulka: Average Price = $4.99
