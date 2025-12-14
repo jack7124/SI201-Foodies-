@@ -50,7 +50,7 @@ def create_kroger_tables():
     # UPC stands for Universal Product Code (barcode identifier)
     products_table = """CREATE TABLE IF NOT EXISTS products(
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    upc TEXT,
+    upc TEXT UNIQUE,
     description TEXT,
     brand TEXT)"""
 
@@ -66,7 +66,8 @@ def create_kroger_tables():
     promo_price REAL,
     stock_level TEXT,
     size TEXT,
-    FOREIGN KEY(product_id) REFERENCES products(id))"""
+    FOREIGN KEY(product_id) REFERENCES products(id),
+    UNIQUE(product_id))"""
 
     c.execute(items_table)
 
@@ -335,8 +336,8 @@ def into_krogerdb(products, location_id):
                     product["stock_level"],
                     product["size"]
                 ))
-        
-            inserted += 1
+            if cur.rowcount > 0:
+                inserted += 1
         except Exception as weird_error:
             print(f"\nError processing item: {weird_error}")
             continue
@@ -411,13 +412,14 @@ def kroger_calculations():
                 price_per_unit.append((row["description"], unit_amount))
             except:
                 continue  # Skip products with invalid size format
-
+    out.append("\n--- Price Per Unit Calculation ---")
     out.append(f"Computed price per unit for {len(price_per_unit)} products")
 
     #### CALCULATION 2: Find cheapest item ####
     if price_per_unit:
         # Find minimum price per unit using lambda function
         cheapest = min(price_per_unit, key=lambda x: x[1])
+        out.append("\n--- Cheapest Item Calculation ---")
         out.append(f"The cheapest item found out of {len(price_per_unit)} products is {cheapest[0]} (${cheapest[1]})")
     
     
@@ -428,7 +430,10 @@ def kroger_calculations():
                 """
                 )
     avg_price = cur.fetchone()["average"]
-    out.append(f"Average price of all products: {round(avg_price, 2)}")
+    out.append("\n--- Average Price Calculation ---")
+    out.append(f"Average price of {cur.rowcount} products: {round(avg_price, 2)}")
+    
+    
 
     #### brand comparison
 
@@ -439,7 +444,11 @@ def kroger_calculations():
                 GROUP BY products.brand""")
     
     brands = cur.fetchall()
+    out.append("\n--- Brand Price Comparison ---")
     out.append(f"Brand comparison for {len(brands)} brands complete.")
+    for brand in brands:
+        out.append(f"{brand['brand']}: Average Price = ${round(brand['avg_price'], 2)}")
+    
 
     with open("kroger_results.txt", 'w') as fh:
         for line in out:
@@ -554,6 +563,8 @@ def into_spoonacular_db(meals):
     inserted = 0
     
     for meal in meals:
+        if inserted >= db_insert_limit:
+            break
         try:
             # Skip meals without essential nutrition data
             if meal.get("calories") is None or meal.get("protein_g") is None:
@@ -581,8 +592,8 @@ def into_spoonacular_db(meals):
                 meal["ingredients_list"],
                 meal["meal_url"]
             ))
-            
-            inserted += 1
+            if cur.rowcount > 0:
+                inserted += 1
             
         except Exception as e:
             print(f"   Error inserting meal: {e}")
