@@ -6,11 +6,11 @@ import sqlite3
 
 db_path = "foodproject.db"
 db_insert_limit = 25
-CLIENT_ID = "REDACTED_ID"
-CLIENT_SECRET = "REDACTED_SECRET"
+CLIENT_ID = ""
+CLIENT_SECRET = ""
 
 # Spoonacular API Configuration
-SPOONACULAR_API_KEY = "REDACTED_KEY"
+SPOONACULAR_API_KEY = ""
 
 
 def get_conn():
